@@ -28,6 +28,7 @@ import { BusinessesModule } from "./modules/businesses/businesses.module";
         MONGO_URI: Joi.string().required(),
         JWT_ACCESS_TOKEN_SECRET: Joi.string().required(),
         JWT_ACCESS_TOKEN_EXPIRATION_MS: Joi.number().default(3600000),
+        ENCRYPTION_SECRET_KEY: Joi.string().required(),
       }),
     }),
     MongooseModule.forRootAsync({

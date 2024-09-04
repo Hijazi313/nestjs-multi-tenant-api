@@ -5,12 +5,15 @@ import { TenantsRepository } from "./tenants.repository";
 import { UsersLogicService } from "../users/services/users-logic.service";
 import { nanoid } from "nanoid";
 import { hash } from "bcrypt";
+import { ConfigService } from "@nestjs/config";
+import Cryptr from "cryptr";
 
 @Injectable()
 export class TenantsService {
   constructor(
     private readonly tenantsRepository: TenantsRepository,
-    private readonly usersLogicService: UsersLogicService
+    private readonly usersLogicService: UsersLogicService,
+    private readonly configService: ConfigService
   ) {}
   async create(createTenantDto: CreateTenantDto) {
     const {
@@ -24,16 +27,24 @@ export class TenantsService {
       );
     //  create a new tenant id
     const tenantId = nanoid(12);
-    // TODO: create a new tenant secret
-    //  Create new user
+    // create a new tenant  encrypted secret
+    const cryptr = new Cryptr(
+      this.configService.getOrThrow("ENCRYPTION_SECRET_KEY")
+    );
+    const encryptedSecret = cryptr.encrypt(nanoid(128));
 
+    //  Create new user
     const hashedPassword = await hash(password, 10);
     await this.usersLogicService.createUser(
       { name, email, password: hashedPassword },
       tenantId
     );
     //  Create Tenant record
-    return this.tenantsRepository.create({ ...createTenantDto, tenantId });
+    return this.tenantsRepository.create({
+      ...createTenantDto,
+      tenantId,
+      encryptedSecret,
+    });
   }
 
   findAll() {
