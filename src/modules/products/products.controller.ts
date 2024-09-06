@@ -7,12 +7,15 @@ import {
   Param,
   Delete,
   Req,
+  UseGuards,
 } from "@nestjs/common";
 import { ProductsService } from "./products.service";
 import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
 import { ApiTags } from "@nestjs/swagger";
+import { TenantAuthGuard } from "../auth/guards/tenant-auth.guard";
 
+@UseGuards(TenantAuthGuard)
 @Controller("products")
 @ApiTags("Products")
 export class ProductsController {

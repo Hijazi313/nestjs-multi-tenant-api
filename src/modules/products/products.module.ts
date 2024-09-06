@@ -7,9 +7,11 @@ import { TenantsMiddleware } from "src/middlewares/tenants.middleware";
 import { ProductsRepository } from "./products.repository";
 import { tenantConnectionProvider } from "src/providers/tenant-connection.provider";
 import { tenantModelsProvider } from "src/providers/tenant-models.provider";
+import { AuthModule } from "../auth/auth.module";
 
 @Module({
   imports: [
+    AuthModule,
     MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
   ],
   controllers: [ProductsController],

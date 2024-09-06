@@ -13,8 +13,7 @@ export class TenantsMiddleware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
     const tenantId = req.headers["x-tenant-id"]?.toString();
     if (!tenantId) throw new BadRequestException("X-TENANT-ID not provided");
-    const tenant = await this.tenantsLogicService.getTenantById(tenantId);
-    console.log(tenant);
+    const tenant = await this.tenantsLogicService.getOneTenant({ tenantId });
     req["tenant"] = tenantId;
     next();
   }

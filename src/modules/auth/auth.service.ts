@@ -126,7 +126,7 @@ export class AuthService {
     return { accessToken, tenantId: user.tenants[0] };
   }
 
-  private async fetchAccessTokenSecretSigninKey(tenantId: string) {
+  async fetchAccessTokenSecretSigninKey(tenantId: string) {
     const Crypt = new Cryptr(
       this.configService.getOrThrow("ENCRYPTION_SECRET_KEY")
     );

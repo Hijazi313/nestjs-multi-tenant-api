@@ -12,6 +12,7 @@ import config from "./config/config";
 import { ProductsModule } from "./modules/products/products.module";
 import { TenantsModule } from "./modules/tenants/tenants.module";
 import { BusinessesModule } from "./modules/businesses/businesses.module";
+import { JwtModule } from "@nestjs/jwt";
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { BusinessesModule } from "./modules/businesses/businesses.module";
       }),
       inject: [ConfigService],
     }),
+    JwtModule.register({ global: true }),
     AuthModule,
     UserModule,
     ProductsModule,
