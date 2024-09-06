@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from "@nestjs/common";
-import { SignupUserDto } from "./dto/user-signup.dto";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { UsersLogicService } from "../users/services/users-logic.service";
 import { compare, hash } from "bcrypt";
 import { User } from "../users/models/user.model";
@@ -11,13 +6,17 @@ import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { Response } from "express";
 import { TokenPayload } from "src/interfaces/auth.interface";
+import { TenantLoginDto } from "./dto/tenant-login.dto";
+import Cryptr from "cryptr";
+import { TenantsLogicService } from "../tenants/services/tenants-logic.service";
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersLogicService: UsersLogicService,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly tenantsLogicService: TenantsLogicService
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -105,5 +104,35 @@ export class AuthService {
     const authenticated = await compare(refreshToken, user.refreshToken);
     if (!authenticated) throw new UnauthorizedException();
     return user;
+  }
+
+  async tenantUserLogin(body: TenantLoginDto) {
+    const { email, password } = body;
+    // TODO: Find if user exists with this email
+    const user = await this.usersLogicService.getOneUser({ email });
+    if (!user)
+      throw new UnauthorizedException("Email or password is not valid");
+    const passwordMatch = await compare(password, user.password);
+    if (!passwordMatch)
+      throw new UnauthorizedException("Email or password is not valid");
+    const secret = await this.fetchAccessTokenSecretSigninKey(user.tenants[0]);
+
+    const tokenPayload: TokenPayload = { userId: user._id.toHexString() };
+    const accessToken = this.jwtService.sign(tokenPayload, {
+      secret,
+      expiresIn: `${this.configService.getOrThrow<number>("JWT_ACCESS_TOKEN_EXPIRATION_MS")}ms`,
+    });
+
+    return { accessToken, tenantId: user.tenants[0] };
+  }
+
+  private async fetchAccessTokenSecretSigninKey(tenantId: string) {
+    const Crypt = new Cryptr(
+      this.configService.getOrThrow("ENCRYPTION_SECRET_KEY")
+    );
+    const tenant = await this.tenantsLogicService.getOneTenant({ tenantId });
+    const decryptedSecret = Crypt.decrypt(tenant.encryptedSecret);
+
+    return decryptedSecret;
   }
 }

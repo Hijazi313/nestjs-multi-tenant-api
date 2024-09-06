@@ -9,7 +9,7 @@ export class UsersLogicService {
   constructor(private readonly usersRepository: UsersRepository) {}
 
   async createUser(user: CreateUserRequestDto, tenantId: string) {
-    return this.usersRepository.create({ ...user, tenantId });
+    return this.usersRepository.create({ ...user, tenants: [tenantId] });
   }
 
   async getOneUser(userFilterQuery: FilterQuery<User>) {
